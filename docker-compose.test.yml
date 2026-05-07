@@ -1,0 +1,20 @@
+services:
+  test:
+    build: .
+    command: pytest --cov=app --cov-report=term-missing --cov-fail-under=100
+    environment:
+      DATABASE_URL: postgresql://bank:bank@test-db:5432/testdb
+    depends_on:
+      test-db:
+        condition: service_healthy
+  test-db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: bank
+      POSTGRES_PASSWORD: bank
+      POSTGRES_DB: testdb
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bank -d testdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5

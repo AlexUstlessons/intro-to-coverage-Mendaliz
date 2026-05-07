@@ -1,0 +1,14 @@
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: bank
+      POSTGRES_PASSWORD: bank
+      POSTGRES_DB: testdb
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "psql -U bank -d testdb -c 'SELECT 1' > /dev/null 2>&1"]
+      interval: 2s
+      timeout: 5s
+      retries: 10

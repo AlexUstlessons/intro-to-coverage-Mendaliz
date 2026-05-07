@@ -1,0 +1,21 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: postgresql://bank:bank@db:5432/bankdb
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: bank
+      POSTGRES_PASSWORD: bank
+      POSTGRES_DB: bankdb
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bank -d bankdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
