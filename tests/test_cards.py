@@ -45,6 +45,20 @@ def test_issue_card_generates_valid_luhn(client):
     assert validate_luhn(data['number'])
 
 
+def test_issue_card_negative_daily_limit(client):
+    _, account_id = make_user_and_account(client, suffix='3')
+    resp = client.post('/api/cards/', json={'account_id': account_id, 'daily_limit': -100})
+    assert resp.status_code == 400
+    assert 'error' in resp.get_json()
+
+
+def test_issue_card_zero_daily_limit(client):
+    _, account_id = make_user_and_account(client, suffix='2')
+    resp = client.post('/api/cards/', json={'account_id': account_id, 'daily_limit': 0})
+    assert resp.status_code == 400
+    assert 'error' in resp.get_json()
+
+
 # ---------------------------------------------------------------------------
 # GET /api/cards/<id>
 # ---------------------------------------------------------------------------
@@ -114,6 +128,24 @@ def test_activate_card_not_found(client):
 
 
 # ---------------------------------------------------------------------------
+# POST /api/cards/<id>/deactivate
+# ---------------------------------------------------------------------------
+
+def test_deactivate_card_success(client):
+    _, account_id = make_user_and_account(client, suffix='9')
+    card_id = issue_and_activate_card(client, account_id)
+    resp = client.post(f'/api/cards/{card_id}/deactivate')
+    assert resp.status_code == 200
+    assert resp.get_json()['is_active'] is False
+
+
+def test_deactivate_card_not_found(client):
+    resp = client.post('/api/cards/99999/deactivate')
+    assert resp.status_code == 404
+    assert 'error' in resp.get_json()
+
+
+# ---------------------------------------------------------------------------
 # POST /api/cards/<id>/limit
 # ---------------------------------------------------------------------------
 
@@ -160,6 +192,14 @@ def test_charge_card_zero_amount(client):
     _, account_id = make_user_and_account(client, suffix='14')
     card_id = issue_and_activate_card(client, account_id)
     resp = client.post(f'/api/cards/{card_id}/charge', json={'amount': 0})
+    assert resp.status_code == 400
+    assert 'error' in resp.get_json()
+
+
+def test_charge_card_negative_amount(client):
+    _, account_id = make_user_and_account(client, suffix='14a')
+    card_id = issue_and_activate_card(client, account_id)
+    resp = client.post(f'/api/cards/{card_id}/charge', json={'amount': -50.0})
     assert resp.status_code == 400
     assert 'error' in resp.get_json()
 

@@ -17,3 +17,6 @@ db-stop:
 test: db
 	pytest
 
+coverage: db
+	pytest --cov=app --cov-report=term-missing --cov-report=html
+
